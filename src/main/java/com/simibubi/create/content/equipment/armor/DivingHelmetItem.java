@@ -69,6 +69,21 @@ public class DivingHelmetItem extends BaseArmorItem {
 		}
 		return stack;
 	}
+		public static boolean isInOxygenDeprivedEnvironment(LivingEntity entity) {
+    Level world = entity.level();
+
+    // Example: Space or other custom dimensions
+    if (world.dimension().location().toString().contains("space") || world.dimension().equals(Level.THE_END)) {
+        return true;
+    }
+
+    // Check for custom effects indicating oxygen loss
+    if (entity.hasEffect(MobEffects.WITHER) || entity.hasEffect(MobEffects.HARM)) {
+        return true; // Use appropriate effects for your mod
+    }
+
+    return false;
+}
 
 	@SubscribeEvent
 	public static void breatheUnderwater(LivingTickEvent event) {
@@ -90,8 +105,8 @@ public class DivingHelmetItem extends BaseArmorItem {
 			.isFireResistant() && lavaDiving)
 			return;
 
-		if (!entity.canDrownInFluidType(entity.getEyeInFluidType()) && !lavaDiving)
-			return;
+		if (!entity.canDrownInFluidType(entity.getEyeInFluidType()) && !lavaDiving && !isInOxygenDeprivedEnvironment(entity))
+    return;
 		if (entity instanceof Player && ((Player) entity).isCreative())
 			return;
 
@@ -108,8 +123,9 @@ public class DivingHelmetItem extends BaseArmorItem {
 				return;
 		}
 
-		if (drowning)
-			entity.setAirSupply(10);
+		if (entity.getAirSupply() < entity.getMaxAirSupply()) {
+    BacktankUtil.consumeAir(entity, backtanks.get(0), 1);
+}
 
 		if (world.isClientSide)
 			entity.getPersistentData()
